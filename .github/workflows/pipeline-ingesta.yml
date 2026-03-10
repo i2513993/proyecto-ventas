@@ -15,12 +15,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache-dependency-path: "ingesta.py"
-
       - name: Install dependencies
         run: |
           pip install sqlalchemy psycopg2-binary pandas
