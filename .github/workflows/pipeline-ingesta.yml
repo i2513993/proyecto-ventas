@@ -33,8 +33,3 @@ jobs:
           DB_NAME: ${{ secrets.DB_NAME }}
           CSV_URL: ${{ secrets.CSV_URL }}
         run: python ingesta.py
-```
-
-Ahora sí el `cache: "pip"` funcionará porque encuentra el `requirements.txt`.
-
----
