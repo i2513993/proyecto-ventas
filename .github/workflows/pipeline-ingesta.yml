@@ -1,1 +1,35 @@
+name: pipeline-ingesta
 
+on:
+  push:
+    paths:
+      - "proyecto-ventas.csv"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 11 * * *"  # 6 AM Perú (UTC-5)
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install sqlalchemy psycopg2-binary pandas --quiet
+
+      - name: Run ingesta pipeline
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          CSV_URL: ${{ secrets.CSV_URL }}
+        run: python ingesta.py
