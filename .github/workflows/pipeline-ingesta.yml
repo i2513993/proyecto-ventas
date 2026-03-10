@@ -6,7 +6,7 @@ on:
       - "proyecto-ventas.csv"
   workflow_dispatch:
   schedule:
-    - cron: "0 11 * * *"  # 6 AM Perú (UTC-5)
+    - cron: "0 11 * * *"
 
 jobs:
   ingest:
@@ -19,7 +19,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
       - name: Install dependencies
         run: pip install sqlalchemy psycopg2-binary pandas --quiet
