@@ -3,7 +3,7 @@ name: supabase-backup
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 5 * * *"  # 12 AM Perú (UTC-5)
+    - cron: "0 5 * * *"
 
 jobs:
   backup:
@@ -21,7 +21,21 @@ jobs:
           sudo apt update
           sudo apt install -y postgresql-client-17
 
-      - name: Run pg_dump gold schema
+      - name: Backup Silver
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGSSLMODE: require
+        run: |
+          pg_dump \
+            -h ${{ secrets.SUPABASE_DB_HOST }} \
+            -p 5432 \
+            -U ${{ secrets.SUPABASE_DB_USER }} \
+            -d ${{ secrets.SUPABASE_DB_NAME }} \
+            -n silver \
+            -F c \
+            -f silver_backup_$(date +%Y-%m-%d).dump
+
+      - name: Backup Gold
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PGSSLMODE: require
@@ -35,9 +49,11 @@ jobs:
             -F c \
             -f gold_backup_$(date +%Y-%m-%d).dump
 
-      - name: Upload backup artifact
+      - name: Upload backups
         uses: actions/upload-artifact@v4
         with:
-          name: gold-backup-${{ github.run_id }}
-          path: gold_backup_*.dump
+          name: backups-${{ github.run_id }}
+          path: |
+            silver_backup_*.dump
+            gold_backup_*.dump
           retention-days: 30
