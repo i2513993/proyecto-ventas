@@ -1,1 +1,43 @@
+name: supabase-backup
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"  # 12 AM Perú (UTC-5)
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt update
+          sudo apt install -y wget gnupg
+          wget -qO - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
+          echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt update
+          sudo apt install -y postgresql-client-17
+
+      - name: Run pg_dump gold schema
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGSSLMODE: require
+        run: |
+          pg_dump \
+            -h ${{ secrets.SUPABASE_DB_HOST }} \
+            -p 5432 \
+            -U ${{ secrets.SUPABASE_DB_USER }} \
+            -d ${{ secrets.SUPABASE_DB_NAME }} \
+            -n gold \
+            -F c \
+            -f gold_backup_$(date +%Y-%m-%d).dump
+
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gold-backup-${{ github.run_id }}
+          path: gold_backup_*.dump
+          retention-days: 30
